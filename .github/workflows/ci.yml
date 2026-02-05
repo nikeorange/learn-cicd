@@ -1,0 +1,36 @@
+name: .NET CI Pipeline
+
+# КОГДА запускать:
+on:
+  push:                # При каждом push
+    branches: [ "main" ]
+  pull_request:        # И при каждом Pull Request
+    branches: [ "main" ]
+
+# ЧТО делать:
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest  # На какой ОС запускать
+    
+    steps:
+    # Шаг 1: Получить код
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    # Шаг 2: Установить .NET 10
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0'
+    
+    # Шаг 3: Восстановить зависимости
+    - name: Restore dependencies
+      run: dotnet restore
+    
+    # Шаг 4: Собрать проект
+    - name: Build
+      run: dotnet build --no-restore
+    
+    # Шаг 5: Запустить тесты
+    - name: Test
+      run: dotnet test --no-build --verbosity normal
