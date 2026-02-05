@@ -56,4 +56,16 @@ public class CalculatorTests
         // Assert
         Assert.Equal(0, result);
     }
+    [Fact]
+    public void Subtract_TwoNumbers_ReturnsDifference()
+    {
+        // Arrange
+        var calculator = new Calculator();
+    
+        // Act
+        var result = calculator.Subtract(10, 4);
+    
+        // Assert
+        Assert.Equal(6, result);
+    }
 }
