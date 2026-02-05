@@ -75,40 +75,8 @@ jobs:
       run: |
         dotnet list package --vulnerable
   
-  # ЗАДАЧА 3: Сборка Docker образа
-  docker-build:
-    runs-on: ubuntu-latest
-    needs: build-and-test
-    if: github.ref == 'refs/heads/main'
-    
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Log in to GitHub Container Registry
-      uses: docker/login-action@v3
-      with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-    
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        push: true
-        tags: |
-          ghcr.io/${{ github.repository_owner }}/my-first-cicd:latest
-          ghcr.io/${{ github.repository_owner }}/my-first-cicd:${{ github.sha }}
-        labels: |
-          org.opencontainers.image.source=${{ github.event.repository.html_url }}
-  
-  # ЗАДАЧА 4: Деплой (симуляция)
+ 
+  # Деплой (симуляция)
   deploy:
     runs-on: ubuntu-latest
     needs: [build-and-test, code-quality]
