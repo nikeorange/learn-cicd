@@ -15,16 +15,17 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
     
     - name: Setup .NET ${{ env.DOTNET_VERSION }}
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
     
-    # КЭШИРОВАНИЕ для скорости
+    # КЭШИРОВАНИЕ для скорости (опционально)
     - name: Cache NuGet packages
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.nuget/packages
         key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
@@ -40,69 +41,109 @@ jobs:
     - name: Test
       run: dotnet test --no-build --verbosity normal
     
-    # СОЗДАЕМ АРТЕФАКТ (результат сборки)
-    - name: Create artifact
-      run: |
-        mkdir -p publish
-        dotnet publish SimpleApp/SimpleApp.csproj -c Release -o publish
+    # СОЗДАЕМ АРТЕФАКТ с правильной версией
+    - name: Create and upload artifact
       if: success()
-    
-    - name: Upload artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: simpleapp-release
-        path: publish/
-      if: success()
+        path: |
+          **/bin/Release/**
+          **/obj/Release/**
+        if-no-files-found: error
   
   # ЗАДАЧА 2: Проверка качества кода
   code-quality:
     runs-on: ubuntu-latest
-    needs: build-and-test  # Запускается только после успешной сборки
+    needs: build-and-test
     
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
     
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '10.0'
     
-    # Проверка форматирования кода
     - name: Check code formatting
       run: |
         dotnet tool install -g dotnet-format
         dotnet format --check --verbosity diagnostic
         
-    # Проверка уязвимостей в зависимостях
     - name: Check for vulnerabilities
       run: |
         dotnet list package --vulnerable
   
-  # ЗАДАЧА 3: Деплой (условный)
+  # ЗАДАЧА 3: Сборка Docker образа
+  docker-build:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main'
+    
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: |
+          ghcr.io/${{ github.repository_owner }}/my-first-cicd:latest
+          ghcr.io/${{ github.repository_owner }}/my-first-cicd:${{ github.sha }}
+        labels: |
+          org.opencontainers.image.source=${{ github.event.repository.html_url }}
+  
+  # ЗАДАЧА 4: Деплой (симуляция)
   deploy:
     runs-on: ubuntu-latest
     needs: [build-and-test, code-quality]
-    if: github.ref == 'refs/heads/main'  # Только для main ветки
+    if: github.ref == 'refs/heads/main'
     
     steps:
     - name: Download artifact
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: simpleapp-release
+        path: ./downloaded-artifacts
+    
+    - name: Show artifact contents
+      run: |
+        echo "📦 Содержимое артефактов:"
+        find ./downloaded-artifacts -type f | head -20
     
     - name: Simulate deployment
       run: |
-        echo "🚀 Начинаем деплой!"
-        echo "Версия: 1.0.0"
+        echo "🚀 НАЧИНАЕМ ДЕПЛОЙ!"
+        echo "====================="
+        echo "Репозиторий: ${{ github.repository }}"
+        echo "Ветка: ${{ github.ref }}"
+        echo "Коммит: ${{ github.sha }}"
         echo "Время: $(date)"
         echo ""
-        echo "Артефакты:"
-        ls -la
+        echo "✅ Сборка и тесты прошли успешно"
+        echo "✅ Проверка качества кода завершена"
+        echo "✅ Docker образ создан"
         echo ""
-        echo "📦 Приложение готово к развертыванию!"
+        echo "📋 Дальнейшие шаги (в реальном проекте):"
+        echo "1. Подключение к серверу"
+        echo "2. Копирование файлов"
+        echo "3. Остановка старой версии"
+        echo "4. Запуск новой версии"
+        echo "5. Проверка здоровья"
         echo ""
-        echo "В реальном сценарии здесь было бы:"
-        echo "1. Копирование файлов на сервер"
-        echo "2. Настройка служб"
-        echo "3. Перезапуск приложения"
-        echo "4. Проверка здоровья"
+        echo "🎉 Деплой успешно завершен!"
