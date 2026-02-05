@@ -31,7 +31,22 @@ jobs:
     
     - name: Test
       run: dotnet test --verbosity normal
-      
+    
+    - name: Test with reports
+      run: |
+        dotnet test \
+          --logger "trx;LogFileName=test-results.trx" \
+          --logger "html;LogFileName=test-report.html" \
+          --collect:"XPlat Code Coverage" \
+          --results-directory TestResults  
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: TestResults/
+      if: always()   
+
     - name: Show success
       run: echo "✅ Build and tests completed successfully!"
   
@@ -95,3 +110,35 @@ jobs:
         echo "✅ Тесты выполнены"
         echo ""
         echo "🎉 Готово! Приложение можно развернуть."
+
+
+ # ЗАДАЧА 4: Сборка Docker образа
+  docker-build:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main'
+    
+    permissions:
+      contents: read
+      packages: write
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: |
+          ghcr.io/${{ github.repository }}:latest
+          ghcr.io/${{ github.repository }}:${{ github.sha }}
+        labels: |
+          org.opencontainers.image.source=${{ github.event.repository.html_url }}
