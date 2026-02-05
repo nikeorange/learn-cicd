@@ -1,0 +1,7 @@
+C:\LearnCICD\Tests\SimpleApp.Tests\bin\Debug\net10.0\.msCoverageSourceRootsMapping_SimpleApp.Tests
+C:\LearnCICD\Tests\SimpleApp.Tests\bin\Debug\net10.0\CoverletSourceRootsMapping_SimpleApp.Tests
+C:\LearnCICD\Tests\SimpleApp.Tests\obj\Debug\net10.0\SimpleApp.Tests.csproj.AssemblyReference.cache
+C:\LearnCICD\Tests\SimpleApp.Tests\obj\Debug\net10.0\SimpleApp.Tests.GeneratedMSBuildEditorConfig.editorconfig
+C:\LearnCICD\Tests\SimpleApp.Tests\obj\Debug\net10.0\SimpleApp.Tests.AssemblyInfoInputs.cache
+C:\LearnCICD\Tests\SimpleApp.Tests\obj\Debug\net10.0\SimpleApp.Tests.AssemblyInfo.cs
+C:\LearnCICD\Tests\SimpleApp.Tests\obj\Debug\net10.0\SimpleApp.Tests.csproj.CoreCompileInputs.cache
